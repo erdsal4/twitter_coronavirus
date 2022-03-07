@@ -1,17 +1,8 @@
 # Coronavirus twitter analysis
 
-You will scan all geotagged tweets sent in 2020 to monitor for the spread of the coronavirus on social media.
+## Background
 
-**Due date:** 
-Sunday, 11 April.
-
-This homework will require LOTs of computation time.
-I recommend that you have your code working by **21 Mar** to ensure that you will have enough time to execute the code.
-No extensions will be granted for any reason.
-
-You will continue to have assignments during the next few weeks,
-and so if you delay working on this homework,
-you will have some very heavy work loads ahead of you.
+In this project, we use the MapReduce technique to analyze coronavirus related tweets by country and by language among all geotagged tweets between October 2019 and April 2020. We do this by calculating the number of tweets that included one or more hashtags from a predetermined list of hashtags like `#covid19`, `#coronavirus` etc. Since our data is multilingual, we also include some hashtag keywords in Chinese and Japanese. Since there are millions of tweets, the MapReduce technique provides us with an efficient way to count these tweets.
 
 **Learning Objectives:**
 
@@ -19,78 +10,28 @@ you will have some very heavy work loads ahead of you.
 1. work with multilingual text
 1. use the MapReduce divide-and-conquer paradigm to create parallel code
 
-## Background
-
-Approximately 500 million tweets are sent everyday.
-Of those tweets, about 1% are *geotagged*.
-That is, the user's device includes location information about where the tweets were sent from.
-The lambda server's `/data-fast/twitter\ 2020` folder contains all geotagged tweets that were sent in 2020.
-In total, there are about 1.1 billion tweets in this dataset.
-We can calculate the amount of disk space used by the dataset with the `du` command as follows:
-```
-$ du -h /data-fast/twitter\ 2020
-```
-
-The tweets are stored as follows.
-The tweets for each day are stored in a zip file `geoTwitterYY-MM-DD.zip`,
-and inside this zip file are 24 text files, one for each hour of the day.
-Each text file contains a single tweet per line in JSON format.
-JSON is a popular format for storing data that is closely related to python dictionaries.
-
-Vim is able to open compressed zip files,
-and I encourage you to use vim to explore the dataset.
-For example, run the command
-```
-$ vim /data-fast/twitter\ 2020/geoTwitter20-01-01.zip
-```
-Or you can get a "pretty printed" interface with a command like
-```
-$ unzip -p /data-fast/twitter\ 2020/geoTwitter20-01-01.zip | head -n1 | python3 -m json.tool | vim -
-```
-
-You will follow the [MapReduce](https://en.wikipedia.org/wiki/MapReduce) procedure to analyze these tweets.
-MapReduce is a famous procedure for large scale parallel processing that is widely used in industry.
-It is a 3 step procedure summarized in the following image:
-
-<img src=mapreduce.png width=100% />
-
-I have already done the partition step for you (by splitting up the tweets into one file per day).
-You will have to do the map and reduce steps.
-
 **Runtime:**
 
-The simplest and most common scenario is that the map procedure takes time O(n) and the reduce procedure takes time O(1).
-If you have p<<n processors, then the overall runtime will be O(n/p).
+In our case, the map procedure takes time O(n) and the reduce procedure takes time O(1).
+If we have p<<n processors, then the overall runtime will be O(n/p).
 This means that:
 1. doubling the amount of data will cause the analysis to take twice as long;
 1. doubling the number of processors will cause the analysis to take half as long;
-1. if you want to add more data and keep the processing time the same, then you need to add a proportional number of processors.
+1. if we want to add more data and keep the processing time the same, then we need to add a proportional number of processors.
 
-More complex runtimes are possible.
-Merge sort over MapReduce is the classic example. 
-Here, mapping is equivalent to sorting and so takes time O(n log n),
-and reducing is a call to the `_reduce` function that takes time O(n).
-But they are both rare in practice and require careful math to describe,
-so we will ignore them.
-In the merge sort example, it requires p=n processors just to reduce the runtime down to O(n)...
-that's a lot of additional computing power for very little gain,
-and so is impractical.
+## Running the code
 
-## Background Tasks
-
-Complete the following tasks to familiarize yourself with the sample code:
-
-1. Fork the [twitter\_coronavirus](https://github.com/mikeizbicki/twitter_coronavirus) repo and clone your fork onto the lambda server.
+If you like to try this analysis on your own set of data, here is a list of commands that can be helpful in doing so.
 
 1. **Mapping:**
    The `map.py` file processes a single zip file of tweets.
    From the root directory of your clone, run the command
    ```
-   $ ./src/map.py --input_path=/data-fast/twitter\ 2020/geoTwitter20-02-16.zip
+   $ ./src/map.py --input_path=/<PATH_TO_DATASET>/geoTwitter20-02-16.zip
    ```
    This command will take a few minutes to run as it is processing all of the tweets within the zip file.
    After the command finishes, you will now have a folder `outputs` that contains a file `geoTwitter20-02-16.zip.lang`.
-   This is a file that contains JSON formatted information summarizing the tweets from 16 February.
+   This is a file that contains JSON formatted information summarizing the tweets from 16 February 2020.
 
 1. **Visualizing:**
    The `visualize.py` file displays the output from running the `map.py` file.
@@ -99,11 +40,8 @@ Complete the following tasks to familiarize yourself with the sample code:
    $ ./src/visualize.py --input_path=outputs/geoTwitter20-02-16.zip.lang --key='#coronavirus'
    ```
    This displays the total number of times the hashtag `#coronavirus` was used on 16 February in each of the languages supported by twitter.
-   Now manually inspect the output of the `.lang` file using vim:
-   ```
-   $ vim outputs/geoTwitter20-02-16.zip.lang
-   ```
-   You should see that the file contains a dictionary of dictionaries.
+
+   The file `geoTwitter20-02-16.zip.lang` contains a dictionary of dictionaries.
    The outermost dictionary has languages as the keys, 
    and the innermost dictionary has hashtags as the keys.
    The `visualize.py` file simply provides a nicer visualization of these dictionaries.
@@ -112,7 +50,7 @@ Complete the following tasks to familiarize yourself with the sample code:
    The `reduce.py` file merges the outputs generated by the `map.py` file so that the combined files can be visualized.
    Generate a new output file by running the command
    ```
-   $ ./src/map.py --input_path=/data-fast/twitter\ 2020/geoTwitter20-02-17.zip
+   $ ./src/map.py --input_path=/<PATH_TO_DATASET>/geoTwitter20-02-17.zip
    ```
    Then merge these output files together by running the command
    ```
@@ -128,55 +66,76 @@ Complete the following tasks to familiarize yourself with the sample code:
    ```
    and this displays the combined result.
 
-## Tasks
+## Results
 
-Complete the following tasks:
+### By Country
 
-1. Modify the `map.py` file so that it tracks the usage of the hashtags on both a language and country level.
-   This will require creating a variable `counter_country` similar to the variable `counter_lang`, 
-   and modifying this variable in the `#search hashtags` section of the code appropriately.
-   The output of running `map.py` should be two files now, one that ends in `.lang` for the lanuage dictionary (same as before),
-   and one that ends in `.country` for the country dictionary.
+The `viz/country` folder contains our results for the number of tweets using the hashtags by country between October 2019-April 2020. For example, the `#covid19` hashtag has the following counts:
 
-   **HINT:**
-   Most tweets contain a `place` key,
-   which contains a dictionary with the `country_code` key.
-   This is how you should lookup the country that a tweet was sent from.
-   Some tweets, however, do not have a `country_code` key.
-   This can happen, for example, if the tweet was sent from international waters or the [international space station](https://unistellaroptics.com/10-years-ago-today-the-first-tweet-was-sent-directly-from-space/).
-   Your code will have to be generic enough to handle edge cases similar to this without failing.
+```
+US : 88548
+GB : 26236
+IN : 23870
+CA : 16654
+ES : 12025
+NG : 11344
+FR : 10226
+TR : 10162
+ZA : 10106
+IT : 9270
+```
 
-1. Once your `map.py` file has been modified to track results for each country,
-   you should run the map file on all the tweets in the `/data-fast/twitter\ 2020` folder.
-   In order to do this, you should create a shell script `run_maps.sh` that loops over each file in the dataset and runs `map.py` on that file.
-   Each call to `map.py` can take between minutes to hours to finish.
-   (The exact runtime will depend on the server's load due to other students.)
-   So you should use the `nohup` command to ensure the program continues to run after you disconnect and the `&` operator to ensure that all `map.py` commands run in parallel.
+We see that the US has the most number of tweets with this hashtag over this period, followed by Great Britain and India. These countries were the hotspots of COVID-19, so it makes sense that they are the ones that have the most tweets with this hashtag. As another example, we look at the tweets with hashtag `#冠状病毒`, which is Chinese for "coronavirus". 
 
-1. After your modified `map.py` has run on all the files,
-   you should have a large number of files in your `outputs` folder.
-   Use the `reduce.py` file to combine all of the `.lang` files into a single file,
-   and all of the `.country` files into a different file.
-   Then use the `visualize.py` file to count the total number of occurrences of each of the hashtags.
+```
+US : 23
+CN : 21
+JP : 7
+SG : 3
+ES : 3
+TW : 2
+PH : 2
+AE : 2
+MV : 1
+MN : 1
+```
 
-   For each hashtag, you should create an output file in your repo using output redirection
-   ```
-   $ ./src/visualize.py --input_path=PATH --key=HASHTAG | head > viz/HASHTAG
-   ```
-   but replace `PATH` with the path to the output of your `reduce.py` file and `HASHTAG` is replaced with the hashtag you are analyzing.
+We were very surprised by the result that only 21 tweets included this hashtag from China throughout this period, when China was actually the center of Covid-19 cases. Even the US has more tweets with this hashtag. This could be due to the fact that Twitter is blocked in China, and that the authorities might have been closely engaged in supressing tweets about Covid-19. 
 
-1. Commit all of your code and visualization output files to your github repo and push the results to github.
-    You must edit the `README.md` file to provide a brief explanation of your results.
-    This explanation should be suitable for a future employer to look at while they are interviewing you to get a rough idea of what you accomplished.
-    (And you should tell them about this in your interviews!)
+### By language
 
-## Submission
+We now look at the number of tweets using the hashtags by language. As a good example, we look at the counts for `#corona`:
 
-Upload a link to you github repository on sakai.
-I will look at your code and visualization to determine your grade.
+```
+en : 340693
+es : 90643
+und : 89650
+tr : 34672
+it : 24938
+pt : 21676
+fr : 19643
+hi : 16927
+de : 14369
+in : 12913
+```
 
-Notice that we are not using CI to grade this assignment.
-That's because you can get slightly different numbers depending on some of the design choices you make in your code.
-For example, should the term `corona` count tweets that contain `coronavirus` as well as tweets that contain just `corona`?
-These are relatively insignificant decisions.
-I'm more concerned with your ability to write a shell script and use `nohup`, `&`, and other process control tools effectively.
+We are not surprised to see that English is the lanugage with the most tweet count, since English is a widely used language in the world. The following languages like "Spanish" and "Turkish" might reflect the high engagement and interest of users with the pandemic from Spanish and Turkish speaking countries, or relate to an increase in cases in these countries. Although Spain and Italy were early hotspots for the pandemic, we wouldn't expect people from Turkey to be talking about Covid as much, since Turkey was not a hotspot for the pandemic. It is also worth noting that the languages of a huge number(89650) of tweets using this hashtag could not be identified, which shows how language detection algorithms might fail to detect some languages, in turn causing less utilization of tweet data for the citizens of those countries. 
+
+As another example, we look at the counts for the hashtag `#hospital`:
+
+```
+en : 40572
+es : 2107
+und : 1200
+pt : 287
+ca : 207
+hu : 188
+in : 173
+fr : 122
+ja : 63
+hi : 59
+```
+
+We see that this specific hashtag has a bias towards being used in English tweets, since the word itself is English. We are suprised to see a high number of tweets mentioning `#hospital`. The tweets using this hashtag could be from health care providers and news channels tweeting about hospital utilization rates during these stages of the pandemic. Tweets with this hashtag could have provided a lot of insight for policy makers who would want to see where hospitals are running out of equipment and capacity etc. 
+
+
